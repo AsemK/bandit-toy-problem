@@ -4,6 +4,7 @@ import matplotlib.cm as cm
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.stats import multivariate_normal
 
+
 class RandomSurface:
     """
     A simple class for creating random continuous functions in any dimension. The
@@ -176,7 +177,7 @@ class RandomSurface:
         specified, the option chosen at initialization will be used.
         :return: The randomly generated  function valued at the input pos.
         """
-        if not smooth: smooth = self.smooth
+        if smooth is None: smooth = self.smooth
         if smooth:
             return self.get_smooth_surface_at(pos)
         else:
@@ -288,18 +289,51 @@ class RandomSurface:
         plt.show()
 
 
+##############################################################################
+#                                    DEMO                                    #
+##############################################################################
 if __name__ == '__main__':
-    random_surface = RandomSurface([(0, 1.0), (0, 1.0)], smooth=False)
-    random_surface.create_random_surface(30)
-    print(random_surface.get_rough_surface_at(random_surface.get_rough_highest_pos()))
-    print(random_surface.get_rough_highest_pos())
-    print(random_surface.get_smooth_surface_at(random_surface.get_smooth_highest_pos()))
-    print(random_surface.get_smooth_highest_pos())
+    # one dimension, 1 rock
+    random_surface = RandomSurface([(1.0, 2.0)], (0.2, 1.5), (0.001, 0.005))
+    random_surface.create_random_surface(1)
+    random_surface.graph()
+
+    # one dimension, 10 rocks
+    random_surface.create_random_surface(10)
+    print('position of maximum of smooth function is close to',
+          random_surface.get_smooth_highest_pos())
+    random_surface.graph() # graph smooth function
+    print('position of maximum of rough function is at',
+          random_surface.get_rough_highest_pos())
+    random_surface.graph(smooth=False)  # graph rough function
+
+    # two dimensions, 1 rock
+    random_surface = RandomSurface([(0.0, 1.0), (1.0, 2.0)], smooth=False)
+    random_surface.create_random_surface(1)
     random_surface.contour()
+
+    # two dimensions, 30 rocks
+    random_surface.create_random_surface(30)
+    print('position of maximum of rough function is at',
+          random_surface.get_rough_highest_pos())
+    random_surface.contour()  # graph rough function (it was chosen as default when initializing
     random_surface.graph3d()
 
-    # diag_range = (0.1, 0.2)
-    # off_diag_range = (-0.1, 0.1)
-    # print(RandomSurface.random_positive_definite_mat(1, diag_range, off_diag_range))
-    # print(RandomSurface.random_positive_definite_mat(2, diag_range, off_diag_range))
-    # print(RandomSurface.random_positive_definite_mat(3, diag_range, off_diag_range))
+    print('position of maximum of smooth function is close to',
+          random_surface.get_smooth_highest_pos())
+    max_pos = random_surface.get_2D_highest_pos(smooth=True)
+    print('position of maximum of smooth function is at',
+          max_pos, 'and =', random_surface.get_smooth_surface_at(max_pos))
+    random_surface.contour(smooth=True)  # graph smooth function
+    random_surface.graph3d(smooth=True)
+
+    random_surface.graph(1, [max_pos[0]], smooth=True)  # graph cross section of smooth funciton along y-axis
+
+    # three dimensions, 30 rocks
+    random_surface = RandomSurface([(0, 1.0), (0, 1.0), (0, 1.0)])
+    random_surface.create_random_surface(30)
+    max_pos = random_surface.get_smooth_highest_pos()
+    print('position of maximum of smooth function is close to', max_pos)
+    random_surface.contour(0, 1, [max_pos[2]])  # graph 3D cross section of smooth function along axes 0 and 1
+    random_surface.graph3d(1, 2, [max_pos[0]])  # graph 3D cross section of smooth function along axes 1 and 2
+    random_surface.graph(1,  [max_pos[0], max_pos[2]]) # graph cross section of smooth funciton along axis 1
