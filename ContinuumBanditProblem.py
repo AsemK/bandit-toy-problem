@@ -25,10 +25,3 @@ class ContinuumBanditProblem:
         The values should be inputted as a tuple of n elements.
         """
         pass
-
-    def graph(self, axis1, axis2=None):
-        """
-        Returns the reward given values of the n parameters.
-        The values should be inputted as a tuple of n elements.
-        """
-        pass
