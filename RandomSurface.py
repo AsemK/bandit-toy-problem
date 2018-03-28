@@ -11,10 +11,10 @@ class RandomSurface:
     functions are created using multiples of gaussian multivariate distribution PDFs
     named "rocks".
     """
-    def __init__(self, pos_ranges, values_range=(0.0, 1.0), cov_diag_range=(0.005, 0.01),
-                 cov_off_diag_range=(-0.005, 0.005), smooth=True):
+    def __init__(self, domains, values_range=(0.0, 1.0), cov_diag_range=(0.01, 0.02),
+                 cov_off_diag_range=(-0.01, 0.01), smooth=True):
         """
-        :param pos_ranges: the domain of the function along each dimension as a list of tuples.
+        :param domains: the domain of the function along each dimension as a list of tuples.
         :param values_range: The range of the function
         :param cov_diag_range: The range of the diagonal elements of the randomly
         generated covariance matrices. This controls the range of the "width" of the
@@ -26,7 +26,7 @@ class RandomSurface:
         else rough surfaces will be graphed. Also self.get_surface_at will obey the
         chosen option
         """
-        self.pos_ranges = pos_ranges
+        self.domains = domains
         self.values_range = values_range
         self.cov_diag_range = cov_diag_range
         self.cov_off_diag_range = cov_off_diag_range
@@ -35,7 +35,10 @@ class RandomSurface:
 
     def get_dim(self):
         """ Returns the number of dimensions """
-        return len(self.pos_ranges)
+        return len(self.domains)
+
+    def get_domains(self):
+        return self.domains
 
     def get_rocks_num(self):
         return len(self.rocks)
@@ -83,7 +86,7 @@ class RandomSurface:
         :return: a tuple containing: rv: an object that allows extracting the PDF at
         certain position, as well as mean_pos and cov.
         """
-        mean_pos = [self.scale(np.random.random(), *self.pos_ranges[i])
+        mean_pos = [self.scale(np.random.random(), *self.domains[i])
                     for i in range(self.get_dim())]
         cov = self.random_positive_definite_mat(self.get_dim(), self.cov_diag_range,
                                                 self.cov_off_diag_range)
@@ -213,7 +216,7 @@ class RandomSurface:
             return
 
         # calculate position vector
-        x = np.arange(*self.pos_ranges[axis], precision)
+        x = np.arange(*self.domains[axis], precision)
         pos = np.zeros((len(x), self.get_dim()))
         c = 0
         for i in range(self.get_dim()):
@@ -242,8 +245,8 @@ class RandomSurface:
             # TODO: raise an exception
             return
 
-        x, y = np.meshgrid(np.arange(*self.pos_ranges[axis1], precision),
-                           np.arange(*self.pos_ranges[axis2], precision))
+        x, y = np.meshgrid(np.arange(*self.domains[axis1], precision),
+                           np.arange(*self.domains[axis2], precision))
         pos = np.zeros(x.shape + (self.get_dim(),))
         c = 0
         for i in range(self.get_dim()):
@@ -271,7 +274,7 @@ class RandomSurface:
         plt.contourf(x, y, self.get_surface_at(pos, smooth), levels=np.arange(
             self.values_range[0], self.values_range[1]+0.2, 0.05), cmap=cm.Reds)
         plt.axis('square')
-        plt.axis([*self.pos_ranges[axis1], *self.pos_ranges[axis2]])
+        plt.axis([*self.domains[axis1], *self.domains[axis2]])
         plt.show()
 
     def graph3d(self, axis1=0, axis2=1, other_axes_values=[], precision=0.01, smooth=None):
