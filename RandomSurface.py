@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.stats import multivariate_normal
+import util
 
 
 class RandomSurface:
@@ -43,42 +44,6 @@ class RandomSurface:
     def get_rocks_num(self):
         return len(self.rocks)
 
-    @staticmethod
-    def scale(val, low, high):
-        """ scales a given normalized input to span a certain range """
-        return val*(high-low)+low
-
-    @staticmethod
-    def random_positive_definite_mat(dim, diag_range, off_diag_range):
-        """
-        Generates a random positive definite matrix for any dimension to be used in
-        generating random gaussian distributions.
-
-        Note that any positive definite matrix can be decomposed to
-        Q.transpose() * D * Q, where Q is any full rank matrix and D is a diagonal
-        positive matrix.
-        A slightly different way is used below to make it easier to force ranges on the
-        generated matrix elements, which very important to effectively control the
-        shape of the generated gaussian distributions.
-
-        This function may fail (leading to an infinite loop) if the input off_diag_range
-        allows values higher than those in the in the diag_range.
-        TODO: raise exception if the input diag_range and off_diag_range are not valid
-        """
-        Q = np.zeros([dim, dim])
-        high = np.sqrt(off_diag_range[1])
-        low = high - np.sqrt(off_diag_range[1]-off_diag_range[0])
-        # ensure that Q is full rank (can be done more efficiently)
-        while np.linalg.matrix_rank(Q) < dim:
-            Q = RandomSurface.scale(np.random.random([dim, dim]), low, high)
-        Q = Q.transpose().dot(Q); np.fill_diagonal(Q, 0)
-        M = np.zeros([dim, dim])
-        # ensure that M is positive definite (can be done more efficiently)
-        while not np.all(np.linalg.eigvals(M) > 0):
-            # TODO: raise a timeout exception when this loop executes repeatedly.
-            M = Q + np.diag(RandomSurface.scale(np.random.random(dim), *diag_range))
-        return M
-
     def random_gaussian_surface(self):
         """
         creates a random gaussian distribution with the help of the Scipy funcion
@@ -86,9 +51,8 @@ class RandomSurface:
         :return: a tuple containing: rv: an object that allows extracting the PDF at
         certain position, as well as mean_pos and cov.
         """
-        mean_pos = [self.scale(np.random.random(), *self.domains[i])
-                    for i in range(self.get_dim())]
-        cov = self.random_positive_definite_mat(self.get_dim(), self.cov_diag_range,
+        mean_pos = util.scale_vec(np.random.random(self.get_dim()), self.domains)
+        cov = util.random_positive_definite_mat(self.get_dim(), self.cov_diag_range,
                                                 self.cov_off_diag_range)
         rv = multivariate_normal(mean_pos, cov)
         return rv, mean_pos, cov
@@ -119,7 +83,7 @@ class RandomSurface:
         result = 0
         for rock in self.rocks:
             result = np.maximum(result, rock[0].pdf(pos)*rock[-1]/rock[0].pdf(rock[1]))
-        result = self.scale(result, *self.values_range)
+        result = util.scale(result, self.values_range)
         return result
 
     def get_rough_highest_pos(self):
@@ -145,7 +109,7 @@ class RandomSurface:
         result = 0
         for i, rock in enumerate(self.rocks):
             result += rock[0].pdf(pos) * rock[-1] / rock[0].pdf(rock[1]) / height
-        result = self.scale(result, *self.values_range)
+        result = util.scale(result, self.values_range)
         return result
 
     def get_smooth_rocks_heights(self):
