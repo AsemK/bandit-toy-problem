@@ -7,7 +7,12 @@ def scale(val, range):
 
 
 def scale_vec(vec, ranges):
-    return list(map(scale, vec, ranges))
+    vec = np.array(vec)
+    if (vec.ndim == 1): return list(map(scale, vec, ranges))
+    scaled = np.empty(vec.shape)
+    for i in range(vec.shape[1]):
+        scaled[:,i] = scale(vec[:,i], ranges[i])
+    return scaled
 
 
 def random_positive_definite_mat(dim, diag_range, off_diag_range):
@@ -39,3 +44,13 @@ def random_positive_definite_mat(dim, diag_range, off_diag_range):
         # TODO: raise a timeout exception when this loop executes repeatedly.
         M = Q + np.diag(scale(np.random.random(dim), diag_range))
     return M
+
+
+def gaussian_kernel(x1, x2, sigma_a2, W=None):
+    if (x1.ndim == 1): x1 = x1[np.newaxis, :]
+    if (x2.ndim == 1): x2 = x2[np.newaxis, :]
+    if W is None:
+        W = np.identity(x1.shape[1])
+    else:
+        W = np.diag(W)
+    return sigma_a2 * np.exp(np.einsum('ij,ij->i', -0.5 * (x2 - x1).dot(W), x2 - x1))
