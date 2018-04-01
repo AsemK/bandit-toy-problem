@@ -46,11 +46,11 @@ def random_positive_definite_mat(dim, diag_range, off_diag_range):
     return M
 
 
-def gaussian_kernel(x1, x2, sigma_a2, W=None):
+def gaussian_kernel(x1, x2, g, W=None):
     if (x1.ndim == 1): x1 = x1[np.newaxis, :]
     if (x2.ndim == 1): x2 = x2[np.newaxis, :]
     if W is None:
         W = np.identity(x1.shape[1])
     else:
         W = np.diag(W)
-    return sigma_a2 * np.exp(np.einsum('ij,ij->i', -0.5 * (x2 - x1).dot(W), x2 - x1))
+    return np.exp(np.einsum('ij,ij->i', -g * (x2 - x1).dot(W), x2 - x1))
