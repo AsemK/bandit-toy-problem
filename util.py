@@ -32,12 +32,22 @@ def random_positive_definite_mat(dim, diag_range, off_diag_range):
     TODO: raise exception if the input diag_range and off_diag_range are not valid
     """
     Q = np.zeros([dim, dim])
-    high = np.sqrt(off_diag_range[1])
-    low = high - np.sqrt(off_diag_range[1]-off_diag_range[0])
+    if off_diag_range[0] > 0:
+        low = np.sqrt(off_diag_range[0]/dim)
+        high = np.sqrt(off_diag_range[1]/dim)
+    elif off_diag_range[1] < abs(off_diag_range[0]):
+        low = - np.sqrt(off_diag_range[1]/dim)
+        high = off_diag_range[0]/(dim*low)
+    else:
+        high = np.sqrt(off_diag_range[1] / dim)
+        low = off_diag_range[0] / (dim * high)
+    print(low, high)
     # ensure that Q is full rank (can be done more efficiently)
     while np.linalg.matrix_rank(Q) < dim:
         Q = scale(np.random.random([dim, dim]), (low, high))
+        print(1)
     Q = Q.transpose().dot(Q); np.fill_diagonal(Q, 0)
+    print(Q)
     M = np.zeros([dim, dim])
     # ensure that M is positive definite (can be done more efficiently)
     while not np.all(np.linalg.eigvals(M) > 0):
